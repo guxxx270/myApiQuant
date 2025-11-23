@@ -7,6 +7,7 @@
 - 检测新交易
 - 定时自动监控
 - 灵活的监控间隔设置
+- **企业微信推送通知（新增）**
 
 ## 安装依赖
 
@@ -19,6 +20,39 @@ pip install -r requirements.txt
 pip install requests
 pip install APScheduler
 ```
+
+## 企业微信推送配置
+
+### 1. 配置说明
+
+在 `cfg.ini` 或 `cfg.ini.local` 中配置企业微信机器人：
+
+```ini
+[WeChat]
+; 企业微信机器人Access Token（从企业微信群机器人设置中获取）
+Access_Token = your-webhook-key-here
+; 群名称（用于非生产环境标识）
+Access_name = Dev_IT_Notification
+; @提醒的人（可选，多个人用空格分隔）
+At_person =
+; 是否启用企业微信推送
+Enabled = true
+```
+
+### 2. 如何获取 Access Token
+
+1. 在企业微信群中，点击群设置 → 添加群机器人
+2. 选择"自定义机器人"
+3. 复制 Webhook 地址中的 key 参数值
+4. 将 key 值配置到 `Access_Token` 字段
+
+### 3. 推送触发时机
+
+- ✅ 定时监控发现新交易时自动推送
+- ✅ 监控任务执行失败时推送告警
+- ✅ 可手动调用测试接口验证推送功能
+
+---
 
 ## API接口说明
 
@@ -238,6 +272,65 @@ curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/update_interval \
 **使用示例**:
 ```bash
 curl http://127.0.0.1:5001/api/monitor/scheduler/status
+```
+
+---
+
+## 企业微信推送测试
+
+### 8. 测试企业微信推送
+
+**接口**: `POST /api/wechat/test`
+
+**请求参数**:
+```json
+{
+  "message": "测试消息内容",  // 可选，默认"这是一条测试消息"
+  "type": "info"             // 可选，info/warning，默认info
+}
+```
+
+**响应示例**:
+```json
+{
+  "code": 0,
+  "msg": "企业微信推送成功",
+  "data": {
+    "errcode": 0,
+    "errmsg": "ok"
+  }
+}
+```
+
+**使用示例**:
+```bash
+# 发送测试通知
+curl -X POST http://127.0.0.1:5001/api/wechat/test \
+  -H "Content-Type: application/json" \
+  -d '{"message": "交易监控系统测试", "type": "info"}'
+
+# 发送测试告警
+curl -X POST http://127.0.0.1:5001/api/wechat/test \
+  -H "Content-Type: application/json" \
+  -d '{"message": "这是告警消息", "type": "warning"}'
+```
+
+**企业微信推送效果**:
+
+发现新交易时，会自动推送如下格式的消息：
+```
+交易监控告警
+| 2025-11-23 19:30:00
+
+> 发现 2 条新交易
+> 检查时间: 2025-11-23 19:30:00
+
+> 1. SC2601 | 开多 | 价格:445.6 | 数量:3.0 | 盈亏:0.00
+>    时间: 2025-11-22 01:50:54
+> 2. CU2601 | 开空 | 价格:86190.0 | 数量:3.0 | 盈亏:0.00
+>    时间: 2025-11-22 00:48:55
+
+> Dev_IT_Notification
 ```
 
 ---

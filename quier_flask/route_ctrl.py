@@ -9,6 +9,7 @@ from flask import jsonify, request
 from quier_flask import app, cfg
 from apps.service.monitor_service import monitor_service
 from apps.service.monitor_scheduler import scheduler
+from apps.utiles.wechat_util import wechat_api_info, wechat_api_warning
 
 route_logger = logging.getLogger("service")
 app.secret_key = '123456789'
@@ -256,3 +257,74 @@ def scheduler_status_api(req):
         "msg": "成功",
         "data": status
     }
+
+
+# ========== 企业微信推送测试接口 ==========
+
+@app.route('/api/wechat/test', methods=["POST"])
+@ctrl_handler()
+def test_wechat_api(req):
+    """
+    测试企业微信推送接口
+
+    请求参数:
+        message: 测试消息内容 (可选)
+        type: 消息类型 info/warning (可选，默认info)
+    """
+    try:
+        # 检查是否启用企业微信推送
+        wechat_enabled = cfg.get_item('WeChat', 'Enabled')
+        if wechat_enabled.lower() != 'true':
+            return {
+                "code": -1,
+                "msg": "企业微信推送未启用，请在配置文件中设置 [WeChat] Enabled = true",
+                "data": None
+            }
+
+        access_token = cfg.get_item('WeChat', 'Access_Token')
+        access_name = cfg.get_item('WeChat', 'Access_name')
+        at_person = cfg.get_item('WeChat', 'At_person')
+
+        message = req.get("message") if req and "message" in req else "这是一条测试消息"
+        msg_type = req.get("type") if req and "type" in req else "info"
+
+        contents = f"> **测试消息**\n> {message}"
+
+        # 根据类型发送不同的消息
+        if msg_type == "warning":
+            result = wechat_api_warning(
+                contents=contents,
+                title="企业微信推送测试（告警）",
+                access_token=access_token,
+                access_name=access_name,
+                at_person=at_person
+            )
+        else:
+            result = wechat_api_info(
+                contents=contents,
+                title="企业微信推送测试（通知）",
+                access_token=access_token,
+                access_name=access_name,
+                at_person=at_person
+            )
+
+        if result and result.get('errcode') == 0:
+            return {
+                "code": 0,
+                "msg": "企业微信推送成功",
+                "data": result
+            }
+        else:
+            return {
+                "code": -1,
+                "msg": f"企业微信推送失败: {result.get('errmsg') if result else '未知错误'}",
+                "data": result
+            }
+
+    except Exception as e:
+        route_logger.error(f"测试企业微信推送失败: {str(e)}")
+        return {
+            "code": -1,
+            "msg": f"测试失败: {str(e)}",
+            "data": None
+        }

@@ -8,6 +8,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime
 
 from apps.service.monitor_service import monitor_service
+from apps.utiles.wechat_util import wechat_api_info, wechat_api_warning, format_trade_message
+from quier_flask import cfg
 
 logger = logging.getLogger("service")
 
@@ -32,6 +34,8 @@ class TradeMonitorScheduler:
             if result["success"]:
                 if result["has_new_trades"]:
                     logger.info(f"发现 {result['new_trades_count']} 条新交易!")
+
+                    # 记录新交易到日志
                     for trade in result["new_trades"]:
                         logger.info(
                             f"新交易: {trade.get('symbol')} | "
@@ -41,17 +45,89 @@ class TradeMonitorScheduler:
                             f"盈亏: {trade.get('pnl')} | "
                             f"时间: {trade.get('trade_time')}"
                         )
+
+                    # 推送企业微信通知
+                    self._send_wechat_notification(result)
                 else:
                     logger.info("暂无新交易")
 
                 logger.info(f"监控任务完成, 检查时间: {result['check_time']}")
             else:
                 logger.error(f"监控任务失败: {result.get('error')}")
+                # 推送失败告警
+                self._send_wechat_error(result.get('error'))
 
             logger.info("=" * 50)
 
         except Exception as e:
             logger.error(f"监控任务异常: {str(e)}", exc_info=True)
+            # 推送异常告警
+            self._send_wechat_error(str(e))
+
+    def _send_wechat_notification(self, result):
+        """发送企业微信新交易通知"""
+        try:
+            # 检查是否启用企业微信推送
+            wechat_enabled = cfg.get_item('WeChat', 'Enabled')
+            if wechat_enabled.lower() != 'true':
+                return
+
+            access_token = cfg.get_item('WeChat', 'Access_Token')
+            access_name = cfg.get_item('WeChat', 'Access_name')
+            at_person = cfg.get_item('WeChat', 'At_person')
+
+            new_trades = result.get('new_trades', [])
+            new_trades_count = result.get('new_trades_count', 0)
+            check_time = result.get('check_time', '')
+
+            # 格式化消息内容
+            contents = f"> **发现 {new_trades_count} 条新交易**\n"
+            contents += f"> 检查时间: {check_time}\n\n"
+            contents += format_trade_message(new_trades)
+
+            # 发送企业微信通知
+            wechat_api_warning(
+                contents=contents,
+                title="交易监控告警",
+                access_token=access_token,
+                access_name=access_name,
+                at_person=at_person
+            )
+
+            logger.info("企业微信新交易通知已发送")
+
+        except Exception as e:
+            logger.error(f"发送企业微信通知失败: {str(e)}")
+
+    def _send_wechat_error(self, error_msg):
+        """发送企业微信错误告警"""
+        try:
+            # 检查是否启用企业微信推送
+            wechat_enabled = cfg.get_item('WeChat', 'Enabled')
+            if wechat_enabled.lower() != 'true':
+                return
+
+            access_token = cfg.get_item('WeChat', 'Access_Token')
+            access_name = cfg.get_item('WeChat', 'Access_name')
+            at_person = cfg.get_item('WeChat', 'At_person')
+
+            # 格式化错误消息
+            contents = f"> **监控任务执行失败**\n"
+            contents += f"> 错误原因: {error_msg}"
+
+            # 发送企业微信告警
+            wechat_api_warning(
+                contents=contents,
+                title="交易监控异常",
+                access_token=access_token,
+                access_name=access_name,
+                at_person=at_person
+            )
+
+            logger.info("企业微信错误告警已发送")
+
+        except Exception as e:
+            logger.error(f"发送企业微信错误告警失败: {str(e)}")
 
     def start(self, interval_seconds=None):
         """
