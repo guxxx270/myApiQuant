@@ -11,7 +11,7 @@ worker_class = "sync"
 backlog = 128
 
 # 绑定地址
-bind = "0.0.0.0:5001"
+bind = "0.0.0.0:5012"
 
 # 错误日志文件
 errorlog = "logs/gunicorn_error.log"
