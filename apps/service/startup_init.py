@@ -87,7 +87,7 @@ def startup_push_recent_trades():
             logger.info(f"[{model_code}] 获取到 {len(trades)} 条交易，准备推送最近 {actual_count} 条")
 
             # 格式化推送消息
-            contents = f"> **交易监控系统已启动**\n"
+            contents = f"> **期货交易监控系统已启动**\n"
             contents += f"> Model Code: {model_code}\n"
             contents += f"> 检查时间: {result.get('check_time')}\n"
             contents += f"> 共获取到 {len(trades)} 条交易记录\n\n"
