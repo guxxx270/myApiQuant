@@ -20,7 +20,7 @@ AutoStartScheduler = false
 
 [WeChat]
 ; 企业微信机器人Access Token
-Access_Token = 5b20e18e-a664-4b01-a8e2-15e10a2a4734
+Access_Token = af900beb-69f2-4432-9741-afff0cb73bff
 ; 群名称（用于非生产环境标识）
 Access_name = Dev_IT_Notification
 ; @提醒的人（可选，多个人用空格分隔）
