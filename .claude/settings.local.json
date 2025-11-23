@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(curl:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(netstat:*)",
+      "Bash(python -c:*)",
+      "Bash(taskkill:*)",
+      "Bash(start_local.bat)",
+      "Bash(python -m json.tool:*)"
     ],
     "deny": [],
     "ask": []

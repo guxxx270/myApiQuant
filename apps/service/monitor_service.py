@@ -43,7 +43,12 @@ class TradeMonitorService:
 
         try:
             logger.info(f"开始请求交易数据: {params}")
-            response = requests.get(self.target_url, params=params, timeout=10)
+            # 不使用代理
+            proxies = {
+                "http": None,
+                "https": None
+            }
+            response = requests.get(self.target_url, params=params, timeout=10, proxies=proxies)
             response.raise_for_status()
 
             data = response.json()
