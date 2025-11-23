@@ -138,17 +138,21 @@ def format_trade_message(trades):
     for i, trade in enumerate(trades[:10], 1):  # 最多显示10条
         symbol = trade.get('symbol', 'N/A')
         side_code = trade.get('side_code', 'N/A')
-        side_display = side_code
+        line_color = None
         if side_code == '开多':
-            side_display = "<font color='red'>开多</font>"
+            line_color = 'red'
         elif side_code == '开空':
-            side_display = "<font color='green'>开空</font>"
+            line_color = 'green'
         price = trade.get('price', 0)
         quantity = trade.get('quantity', 0)
         pnl = trade.get('pnl', 0)
         trade_time = trade.get('trade_time', 'N/A')
 
-        contents += f"> {i}. **{symbol}** | {side_display} | 价格:{price} | 数量:{quantity} | 盈亏:{pnl:.2f}\n"
+        line_content = f"{i}. **{symbol}** | {side_code} | 价格:{price} | 数量:{quantity} | 盈亏:{pnl:.2f}"
+        if line_color:
+            contents += f"> <font color='{line_color}'>{line_content}</font>\n"
+        else:
+            contents += f"> {line_content}\n"
         contents += f">    时间: {trade_time}\n"
 
     if len(trades) > 10:
