@@ -15,5 +15,11 @@ gunicorn==20.1.0
 # 日期处理
 python-dateutil==2.8.2
 
+# HTTP请求库
+requests==2.31.0
+
+# 定时任务调度
+APScheduler==3.10.4
+
 # 其他工具
 colorama==0.4.6

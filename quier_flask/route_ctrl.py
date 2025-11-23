@@ -7,6 +7,8 @@ from logging import handlers
 from flask import jsonify, request
 
 from quier_flask import app, cfg
+from apps.service.monitor_service import monitor_service
+from apps.service.monitor_scheduler import scheduler
 
 route_logger = logging.getLogger("service")
 app.secret_key = '123456789'
@@ -80,4 +82,177 @@ def example_api(req):
             "message": "这是一个示例API",
             "request": req
         }
+    }
+
+
+# ========== 交易监控接口 ==========
+
+@app.route('/api/monitor/fetch_trades', methods=["POST"])
+@ctrl_handler()
+def fetch_trades_api(req):
+    """
+    获取交易数据接口
+
+    请求参数:
+        model_code: 模型代码 (可选, 默认: pandaai)
+        page: 页码 (可选, 默认: 1)
+        limit: 每页数量 (可选, 默认: 50)
+    """
+    model_code = req.get("model_code") if req else None
+    page = req.get("page") if req else None
+    limit = req.get("limit") if req else None
+
+    result = monitor_service.fetch_trades(model_code, page, limit)
+
+    if result["success"]:
+        return {
+            "code": 0,
+            "msg": "成功",
+            "data": result
+        }
+    else:
+        return {
+            "code": -1,
+            "msg": f"获取数据失败: {result.get('error')}",
+            "data": result
+        }
+
+
+@app.route('/api/monitor/check_new_trades', methods=["POST"])
+@ctrl_handler()
+def check_new_trades_api(req):
+    """
+    检查新交易接口
+
+    请求参数:
+        model_code: 模型代码 (可选, 默认: pandaai)
+        page: 页码 (可选, 默认: 1)
+        limit: 每页数量 (可选, 默认: 50)
+    """
+    model_code = req.get("model_code") if req else None
+    page = req.get("page") if req else None
+    limit = req.get("limit") if req else None
+
+    result = monitor_service.check_new_trades(model_code, page, limit)
+
+    if result["success"]:
+        return {
+            "code": 0,
+            "msg": "成功",
+            "data": result
+        }
+    else:
+        return {
+            "code": -1,
+            "msg": f"检查失败: {result.get('error')}",
+            "data": result
+        }
+
+
+@app.route('/api/monitor/status', methods=["GET"])
+@ctrl_handler()
+def monitor_status_api(req):
+    """获取监控状态接口"""
+    status = monitor_service.get_monitor_status()
+
+    return {
+        "code": 0,
+        "msg": "成功",
+        "data": status
+    }
+
+
+# ========== 定时监控控制接口 ==========
+
+@app.route('/api/monitor/scheduler/start', methods=["POST"])
+@ctrl_handler()
+def start_scheduler_api(req):
+    """
+    启动定时监控接口
+
+    请求参数:
+        interval_seconds: 监控间隔（秒，可选，默认60秒）
+    """
+    interval_seconds = req.get("interval_seconds") if req else None
+
+    result = scheduler.start(interval_seconds)
+
+    if result["success"]:
+        return {
+            "code": 0,
+            "msg": "成功",
+            "data": result
+        }
+    else:
+        return {
+            "code": -1,
+            "msg": result.get("message"),
+            "data": result
+        }
+
+
+@app.route('/api/monitor/scheduler/stop', methods=["POST"])
+@ctrl_handler()
+def stop_scheduler_api(req):
+    """停止定时监控接口"""
+    result = scheduler.stop()
+
+    if result["success"]:
+        return {
+            "code": 0,
+            "msg": "成功",
+            "data": result
+        }
+    else:
+        return {
+            "code": -1,
+            "msg": result.get("message"),
+            "data": result
+        }
+
+
+@app.route('/api/monitor/scheduler/update_interval', methods=["POST"])
+@ctrl_handler()
+def update_interval_api(req):
+    """
+    更新监控间隔接口
+
+    请求参数:
+        interval_seconds: 新的监控间隔（秒，必填）
+    """
+    if not req or "interval_seconds" not in req:
+        return {
+            "code": -1,
+            "msg": "缺少参数: interval_seconds",
+            "data": None
+        }
+
+    interval_seconds = req.get("interval_seconds")
+
+    result = scheduler.update_interval(interval_seconds)
+
+    if result["success"]:
+        return {
+            "code": 0,
+            "msg": "成功",
+            "data": result
+        }
+    else:
+        return {
+            "code": -1,
+            "msg": result.get("message"),
+            "data": result
+        }
+
+
+@app.route('/api/monitor/scheduler/status', methods=["GET"])
+@ctrl_handler()
+def scheduler_status_api(req):
+    """获取调度器状态接口"""
+    status = scheduler.get_status()
+
+    return {
+        "code": 0,
+        "msg": "成功",
+        "data": status
     }

@@ -3,3 +3,17 @@ Host = 127.0.0.1
 Port = 5001
 ; 10-debug, 20-info, 30-warning, 40-error, 50-critical
 LogLevel = 10
+
+[Monitor]
+; 监控目标URL
+TargetUrl = https://www.pandaai.online/pandaApi/arena/api/trades
+; 默认模型代码
+DefaultModelCode = pandaai
+; 默认页码
+DefaultPage = 1
+; 默认每页数量
+DefaultLimit = 50
+; 定时监控间隔（秒）
+DefaultIntervalSeconds = 60
+; 是否在启动时自动开启定时监控
+AutoStartScheduler = false
