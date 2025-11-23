@@ -24,39 +24,48 @@ class TradeMonitorScheduler:
         self.check_interval = 60  # 默认60秒检查一次
 
     def monitor_task(self):
-        """监控任务 - 定时执行"""
+        """监控任务 - 定时执行，循环监控所有model_codes"""
         try:
             logger.info("=" * 50)
             logger.info("开始执行定时监控任务...")
 
-            result = monitor_service.check_new_trades()
+            # 获取所有需要监控的model_codes
+            model_codes = monitor_service.get_model_codes()
+            logger.info(f"待监控的model_codes: {model_codes}")
 
-            if result["success"]:
-                if result["has_new_trades"]:
-                    logger.info(f"发现 {result['new_trades_count']} 条新交易!")
+            # 循环监控每个model_code
+            for model_code in model_codes:
+                logger.info(f"开始监控 model_code: {model_code}")
 
-                    # 记录新交易到日志
-                    for trade in result["new_trades"]:
-                        logger.info(
-                            f"新交易: {trade.get('symbol')} | "
-                            f"{trade.get('side_code')} | "
-                            f"价格: {trade.get('price')} | "
-                            f"数量: {trade.get('quantity')} | "
-                            f"盈亏: {trade.get('pnl')} | "
-                            f"时间: {trade.get('trade_time')}"
-                        )
+                result = monitor_service.check_new_trades(model_code=model_code)
 
-                    # 推送企业微信通知
-                    self._send_wechat_notification(result)
+                if result["success"]:
+                    if result["has_new_trades"]:
+                        logger.info(f"[{model_code}] 发现 {result['new_trades_count']} 条新交易!")
+
+                        # 记录新交易到日志
+                        for trade in result["new_trades"]:
+                            logger.info(
+                                f"[{model_code}] 新交易: {trade.get('symbol')} | "
+                                f"{trade.get('side_code')} | "
+                                f"价格: {trade.get('price')} | "
+                                f"数量: {trade.get('quantity')} | "
+                                f"盈亏: {trade.get('pnl')} | "
+                                f"时间: {trade.get('trade_time')}"
+                            )
+
+                        # 推送企业微信通知（每个model_code独立推送）
+                        self._send_wechat_notification(result)
+                    else:
+                        logger.info(f"[{model_code}] 暂无新交易")
+
+                    logger.info(f"[{model_code}] 监控完成, 检查时间: {result['check_time']}")
                 else:
-                    logger.info("暂无新交易")
+                    logger.error(f"[{model_code}] 监控任务失败: {result.get('error')}")
+                    # 推送失败告警
+                    self._send_wechat_error(result.get('error'), model_code)
 
-                logger.info(f"监控任务完成, 检查时间: {result['check_time']}")
-            else:
-                logger.error(f"监控任务失败: {result.get('error')}")
-                # 推送失败告警
-                self._send_wechat_error(result.get('error'))
-
+            logger.info("所有监控任务完成")
             logger.info("=" * 50)
 
         except Exception as e:
@@ -76,6 +85,7 @@ class TradeMonitorScheduler:
             access_name = cfg.get_item('WeChat', 'Access_name')
             at_person = cfg.get_item('WeChat', 'At_person')
 
+            model_code = result.get('model_code', 'unknown')
             new_trades = result.get('new_trades', [])
             new_trades_count = result.get('new_trades_count', 0)
             check_time = result.get('check_time', '')
@@ -85,21 +95,21 @@ class TradeMonitorScheduler:
             contents += f"> 检查时间: {check_time}\n\n"
             contents += format_trade_message(new_trades)
 
-            # 发送企业微信通知
+            # 发送企业微信通知，标题带上model_code
             wechat_api_warning(
                 contents=contents,
-                title="交易监控告警",
+                title=f"交易监控告警 [{model_code}]",
                 access_token=access_token,
                 access_name=access_name,
                 at_person=at_person
             )
 
-            logger.info("企业微信新交易通知已发送")
+            logger.info(f"[{model_code}] 企业微信新交易通知已发送")
 
         except Exception as e:
             logger.error(f"发送企业微信通知失败: {str(e)}")
 
-    def _send_wechat_error(self, error_msg):
+    def _send_wechat_error(self, error_msg, model_code=None):
         """发送企业微信错误告警"""
         try:
             # 检查是否启用企业微信推送
@@ -113,12 +123,15 @@ class TradeMonitorScheduler:
 
             # 格式化错误消息
             contents = f"> **监控任务执行失败**\n"
+            if model_code:
+                contents += f"> Model Code: {model_code}\n"
             contents += f"> 错误原因: {error_msg}"
 
-            # 发送企业微信告警
+            # 发送企业微信告警，标题带上model_code
+            title = f"交易监控异常 [{model_code}]" if model_code else "交易监控异常"
             wechat_api_warning(
                 contents=contents,
-                title="交易监控异常",
+                title=title,
                 access_token=access_token,
                 access_name=access_name,
                 at_person=at_person

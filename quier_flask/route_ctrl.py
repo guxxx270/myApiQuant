@@ -95,11 +95,25 @@ def fetch_trades_api(req):
     获取交易数据接口
 
     请求参数:
-        model_code: 模型代码 (可选, 默认: pandaai)
+        model_code: 模型代码 (必填)
         page: 页码 (可选, 默认: 1)
         limit: 每页数量 (可选, 默认: 50)
     """
     model_code = req.get("model_code") if req else None
+
+    # model_code现在是必填参数
+    if not model_code:
+        # 如果没有提供，使用配置中的第一个model_code
+        model_codes = monitor_service.get_model_codes()
+        if model_codes:
+            model_code = model_codes[0]
+        else:
+            return {
+                "code": -1,
+                "msg": "model_code参数是必填的",
+                "data": None
+            }
+
     page = req.get("page") if req else None
     limit = req.get("limit") if req else None
 
@@ -126,11 +140,25 @@ def check_new_trades_api(req):
     检查新交易接口
 
     请求参数:
-        model_code: 模型代码 (可选, 默认: pandaai)
+        model_code: 模型代码 (必填)
         page: 页码 (可选, 默认: 1)
         limit: 每页数量 (可选, 默认: 50)
     """
     model_code = req.get("model_code") if req else None
+
+    # model_code现在是必填参数
+    if not model_code:
+        # 如果没有提供，使用配置中的第一个model_code
+        model_codes = monitor_service.get_model_codes()
+        if model_codes:
+            model_code = model_codes[0]
+        else:
+            return {
+                "code": -1,
+                "msg": "model_code参数是必填的",
+                "data": None
+            }
+
     page = req.get("page") if req else None
     limit = req.get("limit") if req else None
 
