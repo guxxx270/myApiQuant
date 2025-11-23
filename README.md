@@ -61,15 +61,15 @@ gunicorn -c gunicorn.conf.py quier_flask:app
 
 ### 配置文件
 
-- `cfg.ini.local` - 本地开发配置（127.0.0.1:5001）
-- `cfg.ini` - 生产环境配置（0.0.0.0:5001）
+- `cfg.ini.local` - 本地开发配置（127.0.0.1:5012）
+- `cfg.ini` - 生产环境配置（0.0.0.0:5012）
 
 ### 配置项
 
 ```ini
 [Service]
 Host = 127.0.0.1        # 服务地址
-Port = 5001             # 服务端口
+Port = 5012             # 服务端口
 LogLevel = 10           # 日志级别 (10-debug, 20-info, 30-warning, 40-error, 50-critical)
 ```
 
@@ -77,7 +77,7 @@ LogLevel = 10           # 日志级别 (10-debug, 20-info, 30-warning, 40-error,
 
 ### 健康检查
 ```bash
-GET http://127.0.0.1:5001/hello/testSuccess
+GET http://127.0.0.1:5012/hello/testSuccess
 ```
 
 响应：
@@ -91,7 +91,7 @@ GET http://127.0.0.1:5001/hello/testSuccess
 
 ### 示例API
 ```bash
-POST http://127.0.0.1:5001/api/example
+POST http://127.0.0.1:5012/api/example
 Content-Type: application/json
 
 {

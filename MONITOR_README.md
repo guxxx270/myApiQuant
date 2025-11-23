@@ -88,7 +88,7 @@ Enabled = true
 
 **使用示例**:
 ```bash
-curl -X POST http://127.0.0.1:5001/api/monitor/fetch_trades \
+curl -X POST http://127.0.0.1:5012/api/monitor/fetch_trades \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -117,7 +117,7 @@ curl -X POST http://127.0.0.1:5001/api/monitor/fetch_trades \
 
 **使用示例**:
 ```bash
-curl -X POST http://127.0.0.1:5001/api/monitor/check_new_trades \
+curl -X POST http://127.0.0.1:5012/api/monitor/check_new_trades \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -146,7 +146,7 @@ curl -X POST http://127.0.0.1:5001/api/monitor/check_new_trades \
 
 **使用示例**:
 ```bash
-curl http://127.0.0.1:5001/api/monitor/status
+curl http://127.0.0.1:5012/api/monitor/status
 ```
 
 ---
@@ -181,12 +181,12 @@ curl http://127.0.0.1:5001/api/monitor/status
 **使用示例**:
 ```bash
 # 使用默认间隔（60秒）
-curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/start \
+curl -X POST http://127.0.0.1:5012/api/monitor/scheduler/start \
   -H "Content-Type: application/json" \
   -d '{}'
 
 # 自定义间隔（30秒）
-curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/start \
+curl -X POST http://127.0.0.1:5012/api/monitor/scheduler/start \
   -H "Content-Type: application/json" \
   -d '{"interval_seconds": 30}'
 ```
@@ -210,7 +210,7 @@ curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/start \
 
 **使用示例**:
 ```bash
-curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/stop \
+curl -X POST http://127.0.0.1:5012/api/monitor/scheduler/stop \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -241,7 +241,7 @@ curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/stop \
 
 **使用示例**:
 ```bash
-curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/update_interval \
+curl -X POST http://127.0.0.1:5012/api/monitor/scheduler/update_interval \
   -H "Content-Type: application/json" \
   -d '{"interval_seconds": 120}'
 ```
@@ -271,7 +271,7 @@ curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/update_interval \
 
 **使用示例**:
 ```bash
-curl http://127.0.0.1:5001/api/monitor/scheduler/status
+curl http://127.0.0.1:5012/api/monitor/scheduler/status
 ```
 
 ---
@@ -305,12 +305,12 @@ curl http://127.0.0.1:5001/api/monitor/scheduler/status
 **使用示例**:
 ```bash
 # 发送测试通知
-curl -X POST http://127.0.0.1:5001/api/wechat/test \
+curl -X POST http://127.0.0.1:5012/api/wechat/test \
   -H "Content-Type: application/json" \
   -d '{"message": "交易监控系统测试", "type": "info"}'
 
 # 发送测试告警
-curl -X POST http://127.0.0.1:5001/api/wechat/test \
+curl -X POST http://127.0.0.1:5012/api/wechat/test \
   -H "Content-Type: application/json" \
   -d '{"message": "这是告警消息", "type": "warning"}'
 ```
@@ -369,7 +369,7 @@ AutoStartScheduler = false
 start_local.bat
 
 # 2. 检查新交易
-curl -X POST http://127.0.0.1:5001/api/monitor/check_new_trades \
+curl -X POST http://127.0.0.1:5012/api/monitor/check_new_trades \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -381,18 +381,18 @@ curl -X POST http://127.0.0.1:5001/api/monitor/check_new_trades \
 start_local.bat
 
 # 2. 启动定时监控（每30秒检查一次）
-curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/start \
+curl -X POST http://127.0.0.1:5012/api/monitor/scheduler/start \
   -H "Content-Type: application/json" \
   -d '{"interval_seconds": 30}'
 
 # 3. 查看调度器状态
-curl http://127.0.0.1:5001/api/monitor/scheduler/status
+curl http://127.0.0.1:5012/api/monitor/scheduler/status
 
 # 4. 查看日志（新交易会记录在日志中）
 tail -f logs/service.log
 
 # 5. 停止监控
-curl -X POST http://127.0.0.1:5001/api/monitor/scheduler/stop \
+curl -X POST http://127.0.0.1:5012/api/monitor/scheduler/stop \
   -H "Content-Type: application/json" \
   -d '{}'
 ```

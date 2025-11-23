@@ -6,6 +6,8 @@ import datetime
 import json
 import logging
 import requests
+import base64
+import hashlib
 
 logger = logging.getLogger("service")
 
@@ -159,3 +161,63 @@ def format_trade_message(trades):
         contents += f"\n> 还有 {len(trades) - 10} 条交易未显示..."
 
     return contents
+
+
+def wechat_send_image(image_path, access_token):
+    """
+    发送图片消息到企业微信
+
+    Args:
+        image_path: 图片文件路径
+        access_token: 企业微信机器人Token
+
+    Returns:
+        dict: 发送结果
+    """
+    try:
+        if not access_token:
+            logger.warning("企业微信Token未配置，跳过图片推送")
+            return {"errcode": -1, "errmsg": "Token未配置"}
+
+        # 读取图片文件
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+
+        # 计算base64和md5
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        image_md5 = hashlib.md5(image_data).hexdigest()
+
+        # 构造请求
+        headers = {'Content-Type': 'application/json'}
+        api_url = f"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={access_token}"
+
+        json_text = {
+            'msgtype': 'image',
+            'image': {
+                'base64': image_base64,
+                'md5': image_md5
+            }
+        }
+
+        # 不使用代理
+        proxies = {
+            "http": None,
+            "https": None
+        }
+
+        response = requests.post(api_url, data=json.dumps(json_text),
+                               headers=headers, timeout=30, proxies=proxies)
+        response.raise_for_status()
+
+        result = response.json()
+        if result.get('errcode') == 0:
+            logger.info(f"企业微信图片推送成功")
+        else:
+            logger.error(f"企业微信图片推送失败: {result}")
+
+        return result
+
+    except Exception as e:
+        logger.error(f'企业微信图片推送异常: {str(e)}')
+        return {"errcode": -1, "errmsg": str(e)}
+

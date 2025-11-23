@@ -7,7 +7,10 @@
       "Bash(python -c:*)",
       "Bash(taskkill:*)",
       "Bash(start_local.bat)",
-      "Bash(python -m json.tool:*)"
+      "Bash(python -m json.tool:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(export HTTP_PROXY=\"\")",
+      "Bash(export HTTPS_PROXY=\"\")"
     ],
     "deny": [],
     "ask": []

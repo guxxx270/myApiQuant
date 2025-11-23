@@ -21,5 +21,8 @@ requests==2.31.0
 # 定时任务调度
 APScheduler==3.10.4
 
+# 图表生成
+matplotlib==3.7.1
+
 # 其他工具
 colorama==0.4.6

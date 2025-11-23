@@ -8,7 +8,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime
 
 from apps.service.monitor_service import monitor_service
-from apps.utiles.wechat_util import wechat_api_info, wechat_api_warning, format_trade_message
+from apps.utiles.wechat_util import wechat_api_info, wechat_api_warning, format_trade_message, wechat_send_image
+from apps.utiles.chart_util import generate_pnl_chart, cleanup_chart_file
 from quier_flask import cfg
 
 logger = logging.getLogger("service")
@@ -105,6 +106,41 @@ class TradeMonitorScheduler:
             )
 
             logger.info(f"[{model_code}] 企业微信新交易通知已发送")
+
+            # 检查是否启用图表推送
+            chart_enabled = False
+            try:
+                chart_push = cfg.get_item('WeChat', 'EnableChartPush')
+                chart_enabled = chart_push.lower() == 'true'
+            except Exception:
+                pass
+
+            # 如果启用图表推送，生成并发送盈亏曲线图
+            if chart_enabled:
+                try:
+                    # 获取所有交易数据用于生成图表
+                    all_data = result.get('all_data', {})
+                    trades_data = all_data.get('data', [])
+                    if trades_data and len(trades_data) > 0:
+                        all_trades = trades_data[0].get('trades', [])
+
+                        if all_trades:
+                            logger.info(f"[{model_code}] 开始生成盈亏曲线图...")
+                            chart_path = generate_pnl_chart(
+                                trades=all_trades,
+                                model_code=model_code,
+                                chart_title="实时盈亏曲线"
+                            )
+
+                            if chart_path:
+                                logger.info(f"[{model_code}] 图表生成成功，准备推送...")
+                                wechat_send_image(chart_path, access_token)
+                                # 清理临时文件
+                                cleanup_chart_file(chart_path)
+                            else:
+                                logger.warning(f"[{model_code}] 图表生成失败")
+                except Exception as chart_e:
+                    logger.error(f"[{model_code}] 图表推送失败: {str(chart_e)}")
 
         except Exception as e:
             logger.error(f"发送企业微信通知失败: {str(e)}")

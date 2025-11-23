@@ -5,7 +5,8 @@
 import logging
 from apps.service.monitor_service import monitor_service
 from apps.service.monitor_scheduler import scheduler
-from apps.utiles.wechat_util import wechat_api_info, format_trade_message
+from apps.utiles.wechat_util import wechat_api_info, format_trade_message, wechat_send_image
+from apps.utiles.chart_util import generate_pnl_chart, cleanup_chart_file
 from quier_flask import cfg
 
 logger = logging.getLogger("service")
@@ -102,6 +103,31 @@ def startup_push_recent_trades():
                 access_name=access_name,
                 at_person=at_person
             )
+
+            # 检查是否启用图表推送
+            chart_enabled = False
+            try:
+                chart_push = cfg.get_item('WeChat', 'EnableChartPush')
+                chart_enabled = chart_push.lower() == 'true'
+            except Exception:
+                pass
+
+            # 如果启用图表推送，生成并发送盈亏曲线图
+            if chart_enabled:
+                logger.info(f"[{model_code}] 开始生成盈亏曲线图...")
+                chart_path = generate_pnl_chart(
+                    trades=trades,
+                    model_code=model_code,
+                    chart_title="启动时盈亏曲线"
+                )
+
+                if chart_path:
+                    logger.info(f"[{model_code}] 图表生成成功，准备推送...")
+                    wechat_send_image(chart_path, access_token)
+                    # 清理临时文件
+                    cleanup_chart_file(chart_path)
+                else:
+                    logger.warning(f"[{model_code}] 图表生成失败")
 
             logger.info(f"[{model_code}] 启动推送完成，已推送 {actual_count} 条交易")
 
