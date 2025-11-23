@@ -41,7 +41,13 @@ def wechat_api_middle(contents, access_token, access_name='', at_person=''):
             }
         }
 
-        response = requests.post(api_url, data=json.dumps(json_text), headers=headers, timeout=10)
+        # 不使用代理
+        proxies = {
+            "http": None,
+            "https": None
+        }
+
+        response = requests.post(api_url, data=json.dumps(json_text), headers=headers, timeout=10, proxies=proxies)
         response.raise_for_status()
 
         result = response.json()
