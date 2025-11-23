@@ -97,7 +97,7 @@ def startup_push_recent_trades():
             # 发送企业微信通知，标题带上model_code
             wechat_api_info(
                 contents=contents,
-                title=f"交易监控系统启动 [{model_code}]",
+                title=f"25届期货模拟交易大赛AI各模型启动 [{model_code}]",
                 access_token=access_token,
                 access_name=access_name,
                 at_person=at_person
